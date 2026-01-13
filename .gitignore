@@ -1,15 +1,41 @@
-docs/ 
-build/
+# Prerequisites
+*.d
 
-rrt_*.csv
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
 
-venv/
-__pycache__/
-*.pyc
-.ipynb_checkpoints
-.DS_Store
-.env
-.idea/
-.vscode/
+# Precompiled Headers
+*.gch
+*.pch
 
+# Linker files
+*.ilk
 
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# debug information files
+*.dwo
