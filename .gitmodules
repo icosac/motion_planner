@@ -1,0 +1,3 @@
+[submodule "external/mpdp"]
+	path = external/mpdp
+	url = git@github.com:icosac/mpdp

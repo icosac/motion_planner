@@ -1,0 +1,12 @@
+PROJECT_NAME           = "motion_planner"
+OUTPUT_DIRECTORY       = "@DOXYGEN_OUTPUT_DIR@"
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+INPUT                  = @DOXYGEN_INPUT@
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.h
+EXTRACT_ALL            = YES
+STRIP_FROM_PATH        = "@CMAKE_CURRENT_SOURCE_DIR@"
+QUIET                  = YES
+WARNINGS               = YES
+EXCLUDE                = @DOXYGEN_EXCLUDE@
