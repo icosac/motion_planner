@@ -20,6 +20,7 @@ struct CircleObstacle {
 int main(int argc, char **argv) {
     using motion_planner::State;
 
+    // Parse planner selection flags.
     bool use_rrt_star = true;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -165,6 +166,7 @@ int main(int argc, char **argv) {
         return motion_planner::reeds_shepp_path(from, to, rs_options);
     };
 
+    // Run the selected planner.
     std::vector<State> path;
     if (use_rrt_star) {
         motion_planner::RRTStar planner(rrt_star_options);

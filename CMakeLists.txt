@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(motion_planner STATIC
+    src/grid_astar.cpp
+    src/hybrid_astar.cpp
     src/rrt.cpp
     src/rrt_star.cpp
     src/mpdp_reeds_shepp.cpp
@@ -34,6 +36,12 @@ enable_testing()
 
 add_executable(rrt_reeds_shepp_example examples/rrt_reeds_shepp_example.cpp)
 target_link_libraries(rrt_reeds_shepp_example PRIVATE motion_planner)
+
+add_executable(grid_astar_example examples/grid_astar_example.cpp)
+target_link_libraries(grid_astar_example PRIVATE motion_planner)
+
+add_executable(hybrid_astar_example examples/hybrid_astar_example.cpp)
+target_link_libraries(hybrid_astar_example PRIVATE motion_planner)
 
 # Documentation target (runs only when explicitly built).
 find_package(Doxygen QUIET)

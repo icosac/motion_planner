@@ -95,6 +95,7 @@ std::vector<State> RRT::plan(
     std::uniform_real_distribution<double> uni(0.0, 1.0);
 
     for (int iter = 0; iter < options_.max_iterations; ++iter) {
+        // Goal bias mixes random exploration with occasional goal sampling.
         const bool use_goal = uni(rng) < options_.goal_bias;
         const State target = use_goal ? goal : sampler();
 
@@ -108,6 +109,7 @@ std::vector<State> RRT::plan(
             }
         }
 
+        // Steer toward the target and truncate to a fixed step size.
         const auto full_path = steer(nodes[nearest_index].state, target);
         if (full_path.empty()) {
             continue;
@@ -141,6 +143,7 @@ std::vector<State> RRT::plan(
             options_.visualization_sink(event);
         }
 
+        // If close enough, attempt to connect directly to the goal.
         if (distance(new_state, goal) <= options_.goal_tolerance) {
             const auto goal_path = steer(new_state, goal);
             if (!goal_path.empty() && is_path_valid(goal_path, is_state_valid)) {

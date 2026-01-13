@@ -5,6 +5,8 @@ A small C++17 motion-planning library for SE(2) that provides RRT and RRT* with 
 ## Features
 
 - RRT and RRT* planners for 2D Euclidean space with heading.
+- Grid-based A* planner with configurable resolution.
+- Hybrid A* planner with Reeds-Shepp goal connection.
 - User-provided sampling, distance, steering, and collision checks.
 - Reeds-Shepp steering with forward and reverse segments.
 - Static library build via CMake.
@@ -16,15 +18,27 @@ cmake -S . -B build
 cmake --build build
 ```
 
-## Example
+## Examples
 
-Run the example after building:
+Run the examples after building:
 
 ```sh
 ./build/rrt_reeds_shepp_example
 ```
 
 The example prints a sequence of states (x, y, theta) for the planned path.
+
+```sh
+./build/grid_astar_example
+```
+
+The grid example prints the grid-based A* path.
+
+```sh
+./build/hybrid_astar_example
+```
+
+The hybrid example prints a Reeds-Shepp-feasible path.
 
 ## Visualization
 
@@ -35,6 +49,20 @@ python3 tools/plot_rrt.py --tree rrt_tree.csv --obstacles rrt_obstacles.csv
 ```
 
 The script requires matplotlib (`pip install matplotlib`).
+
+The grid example writes `grid_path.csv`, `grid_obstacles.csv`, and `grid_map.csv`. Use the helper script to plot the grid, obstacles, and final path:
+
+```sh
+python3 tools/plot_grid_astar.py --path grid_path.csv --obstacles grid_obstacles.csv --map grid_map.csv
+```
+
+This script also requires matplotlib (`pip install matplotlib`).
+
+The hybrid example writes `hybrid_path.csv`, `hybrid_path_shortcut.csv`, `hybrid_obstacles.csv`, `hybrid_map.csv`, and `hybrid_nodes.csv` and can be visualized with the same script:
+
+```sh
+python3 tools/plot_grid_astar.py --path hybrid_path.csv --obstacles hybrid_obstacles.csv --map hybrid_map.csv --nodes hybrid_nodes.csv
+```
 
 ## Basic Usage
 
@@ -62,6 +90,22 @@ auto steer = [&](const motion_planner::State &from, const motion_planner::State 
 };
 
 auto path = planner.plan(start, goal, sampler, distance, steer, is_state_valid);
+```
+
+## Grid A*
+
+```cpp
+#include "motion_planner/grid_astar.hpp"
+
+motion_planner::GridAStarOptions grid_options;
+grid_options.min_x = 0.0;
+grid_options.max_x = 10.0;
+grid_options.min_y = 0.0;
+grid_options.max_y = 10.0;
+grid_options.resolution = 0.25;
+
+motion_planner::GridAStar grid_planner(grid_options);
+auto grid_path = grid_planner.plan(start, goal, distance, is_state_valid);
 ```
 
 ## Notes

@@ -12,11 +12,13 @@ constexpr double kEpsilon = 1e-6;
 State advance_state(const State &state, double ds, double curvature) {
     State out = state;
     if (std::fabs(curvature) < 1e-9) {
+        // Straight segment update.
         out.x += ds * std::cos(out.theta);
         out.y += ds * std::sin(out.theta);
         return out;
     }
 
+    // Arc segment update with curvature.
     const double dtheta = curvature * ds;
     out.x += (std::sin(out.theta + dtheta) - std::sin(out.theta)) / curvature;
     out.y += (-std::cos(out.theta + dtheta) + std::cos(out.theta)) / curvature;
@@ -38,6 +40,7 @@ std::vector<State> reeds_shepp_path(
 
     Configuration2 ci(start.x, start.y, start.theta);
     Configuration2 cf(goal.x, goal.y, goal.theta);
+    // Solve the shortest Reeds-Shepp path with MPDP.
     RS rs(ci, cf, {kmax});
     rs.solve();
 
@@ -54,6 +57,7 @@ std::vector<State> reeds_shepp_path(
     State current = start;
     const double step = std::max(options.step_size, 1e-3);
 
+    // Discretize each segment into fixed-length steps.
     for (int i = 0; i < rs.getNseg(); ++i) {
         double remaining = lengths[i];
         while (std::fabs(remaining) > kEpsilon) {

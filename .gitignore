@@ -2,6 +2,8 @@ docs/
 build/
 
 rrt_*.csv
+hybrid_*csv
+grid_*.csv
 
 venv/
 __pycache__/
@@ -12,6 +14,9 @@ __pycache__/
 .idea/
 .vscode/
 
+external/
+
+*.png
 
 # Prerequisites
 *.d

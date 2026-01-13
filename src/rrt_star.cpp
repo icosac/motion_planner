@@ -109,6 +109,7 @@ std::vector<State> RRTStar::plan(
     std::vector<int> goal_nodes;
 
     for (int iter = 0; iter < options_.max_iterations; ++iter) {
+        // Goal bias mixes exploration with direct sampling of the goal.
         const bool use_goal = uni(rng) < options_.goal_bias;
         const State target = use_goal ? goal : sampler();
 
@@ -122,6 +123,7 @@ std::vector<State> RRTStar::plan(
             }
         }
 
+        // Steer toward the target and clamp the step to a fixed distance.
         const auto full_path = steer(nodes[nearest_index].state, target);
         if (full_path.empty()) {
             continue;
@@ -140,6 +142,7 @@ std::vector<State> RRTStar::plan(
 
         const State new_state = truncated.back();
 
+        // Collect nearby nodes for rewiring.
         std::vector<int> neighbors;
         neighbors.reserve(nodes.size());
         for (int i = 0; i < static_cast<int>(nodes.size()); ++i) {
@@ -148,6 +151,7 @@ std::vector<State> RRTStar::plan(
             }
         }
 
+        // Choose the lowest-cost parent among neighbors with a valid connection.
         int best_parent = nearest_index;
         double best_cost = nodes[nearest_index].cost + distance(nodes[nearest_index].state, new_state);
         for (int idx : neighbors) {
@@ -177,6 +181,7 @@ std::vector<State> RRTStar::plan(
             options_.visualization_sink(event);
         }
 
+        // Rewire neighbors through the new node if it improves cost.
         for (int idx : neighbors) {
             if (idx == best_parent) {
                 continue;
@@ -189,6 +194,7 @@ std::vector<State> RRTStar::plan(
             if (!candidate_path.empty() && is_path_valid(candidate_path, is_state_valid)) {
                 nodes[idx].parent = new_index;
                 nodes[idx].cost = candidate_cost;
+                // Recompute costs for the rewired subtree.
                 update_subtree_costs(nodes, idx, distance);
                 if (options_.visualization_sink) {
                     VisualizationEvent event;
@@ -204,6 +210,7 @@ std::vector<State> RRTStar::plan(
             }
         }
 
+        // If close enough, attempt a valid final connection to the goal.
         if (distance(new_state, goal) <= options_.goal_tolerance) {
             const auto goal_path = steer(new_state, goal);
             if (!goal_path.empty() && is_path_valid(goal_path, is_state_valid)) {
