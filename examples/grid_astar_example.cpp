@@ -87,10 +87,10 @@ int main() {
     }
 
     std::cout << "Path found. Waypoints: " << path.size() << "\n";
-    for (const auto &state : path) {
-        std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
-        path_out << state.x << "," << state.y << "," << state.theta << "\n";
-    }
+    // for (const auto &state : path) {
+    //     std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
+    //     path_out << state.x << "," << state.y << "," << state.theta << "\n";
+    // }
 
     return 0;
 }

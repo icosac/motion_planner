@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -86,6 +87,8 @@ int main() {
     std::ofstream nodes_out("hybrid_nodes.csv");
     nodes_out << "x,y,theta\n";
 
+    auto start_time = std::chrono::steady_clock::now();
+
     motion_planner::HybridAStar planner(options);
     const auto result = planner.plan_with_nodes(start, goal, distance, is_state_valid);
     const auto &path = result.path;
@@ -114,19 +117,24 @@ int main() {
     shortcut_out << "x,y,theta\n";
 
     std::cout << "Path found. States: " << path.size() << "\n";
-    for (const auto &state : path) {
-        std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
-        path_out << state.x << "," << state.y << "," << state.theta << "\n";
-    }
+    // for (const auto &state : path) {
+    //     std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
+    //     path_out << state.x << "," << state.y << "," << state.theta << "\n";
+    // }
 
-    std::cout << "Shortcut path states: " << shortened.size() << "\n";
-    for (const auto &state : shortened) {
-        shortcut_out << state.x << "," << state.y << "," << state.theta << "\n";
-    }
+    // std::cout << "Shortcut path states: " << shortened.size() << "\n";
+    // for (const auto &state : shortened) {
+    //     shortcut_out << state.x << "," << state.y << "," << state.theta << "\n";
+    // }
 
-    for (const auto &state : result.nodes) {
-        nodes_out << state.x << "," << state.y << "," << state.theta << "\n";
-    }
+    // for (const auto &state : result.nodes) {
+    //     nodes_out << state.x << "," << state.y << "," << state.theta << "\n";
+    // }
+
+    auto end_time = std::chrono::steady_clock::now();
+    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        end_time - start_time);
+    std::cout << "Planning time: " << elapsed_ms.count() << " ms\n";
 
     return 0;
 }

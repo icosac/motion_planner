@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -166,6 +167,8 @@ int main(int argc, char **argv) {
         return motion_planner::reeds_shepp_path(from, to, rs_options);
     };
 
+    auto start_time = std::chrono::steady_clock::now();
+
     // Run the selected planner.
     std::vector<State> path;
     if (use_rrt_star) {
@@ -201,10 +204,15 @@ int main(int argc, char **argv) {
     std::cout << "Path found. Waypoints: " << path.size()
               << ", discretized states: " << full_path.size() << std::endl;
     std::cout << "Path states: " << full_path.size() << "\n";
-    for (const auto &state : full_path) {
-        std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
-        path_out << state.x << "," << state.y << "," << state.theta << "\n";
-    }
+    // for (const auto &state : full_path) {
+    //     std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
+    //     path_out << state.x << "," << state.y << "," << state.theta << "\n";
+    // }
+
+    auto end_time = std::chrono::steady_clock::now();
+    const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        end_time - start_time);
+    std::cout << "Planning time: " << elapsed_ms.count() << " ms\n";
 
     return 0;
 }
