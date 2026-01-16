@@ -1,8 +1,10 @@
 #include "motion_planner/mpdp_reeds_shepp.hpp"
 
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
 #include <limits>
-#include <rs.hh>
+#include <RSPredict/RSML.h>
 
 namespace motion_planner {
 namespace {
@@ -40,9 +42,19 @@ std::vector<State> reeds_shepp_path(
 
     Configuration2 ci(start.x, start.y, start.theta);
     Configuration2 cf(goal.x, goal.y, goal.theta);
-    // Solve the shortest Reeds-Shepp path with MPDP.
-    RS rs(ci, cf, {kmax});
-    rs.solve();
+    // Solve the shortest Reeds-Shepp path with the brute-force RS implementation.
+    RS rs = RSbruteforce(ci, cf, kmax);
+    if (const char *debug_env = std::getenv("RS_DEBUG"); debug_env && *debug_env != '0') {
+        std::cerr << "[RS_DEBUG] kmax=" << kmax << " l=" << rs.l() << " nseg=" << rs.getNseg() << "\n";
+        if (rs.getNseg() > 0) {
+            const auto lengths = rs.getL();
+            const auto curvatures = rs.getK();
+            for (int i = 0; i < rs.getNseg(); ++i) {
+                std::cerr << "[RS_DEBUG] seg " << i << " len=" << lengths[i]
+                          << " k=" << curvatures[i] << "\n";
+            }
+        }
+    }
 
     if (!std::isfinite(rs.l()) || rs.getNseg() <= 0) {
         return {};

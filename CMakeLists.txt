@@ -27,10 +27,17 @@ add_subdirectory(external/mpdp EXCLUDE_FROM_ALL)
 target_include_directories(motion_planner
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE
+        /home/enrico/Projects/mpdp/RSPredictNNNoOMP/RSPredictNN/include
+        /home/enrico/Projects/mpdp/RSPredictNNNoOMP/RSPredictNN/include/RSPredict
 )
 
 target_compile_features(motion_planner PUBLIC cxx_std_17)
-target_link_libraries(motion_planner PUBLIC MPDPCC)
+target_link_libraries(motion_planner
+    PUBLIC
+        MPDPCC
+        /home/enrico/Projects/mpdp/RSPredictNNNoOMP/RSPredictNN/lib/libRSPredictNN.a
+)
 
 enable_testing()
 
