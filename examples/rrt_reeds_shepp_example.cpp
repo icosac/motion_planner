@@ -48,6 +48,8 @@ int main(int argc, char **argv) {
     const std::vector<CircleObstacle> obstacles = {
         {4.0, 5.0, 1.0},
         {6.0, 4.0, 1.0},
+        {7.0, 7.0, 1.0},
+        {3.0, 8.0, 1.0}
     };
 
     std::ofstream tree_out("rrt_tree.csv");
@@ -91,11 +93,11 @@ int main(int argc, char **argv) {
                  << event.node.x << "," << event.node.y << "," << event.node.theta << ","
                  << event.cost << "," << event.parent_index << "," << event.node_index << "\n";
 
-        if (event.iteration % 200 == 0) {
-            const double percent = 100.0 * static_cast<double>(event.iteration) /
-                static_cast<double>(max_iterations);
-            std::cout << "Iteration " << event.iteration << " (" << percent << "%)" << std::endl;
-        }
+        // if (event.iteration % 200 == 0) {
+        //     const double percent = 100.0 * static_cast<double>(event.iteration) /
+        //         static_cast<double>(max_iterations);
+        //     std::cout << "Iteration " << event.iteration << " (" << percent << "%)" << std::endl;
+        // }
     };
 
     motion_planner::RRTOptions rrt_options;
@@ -204,10 +206,9 @@ int main(int argc, char **argv) {
     std::cout << "Path found. Waypoints: " << path.size()
               << ", discretized states: " << full_path.size() << std::endl;
     std::cout << "Path states: " << full_path.size() << "\n";
-    // for (const auto &state : full_path) {
-    //     std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
-    //     path_out << state.x << "," << state.y << "," << state.theta << "\n";
-    // }
+    for (const auto &state : full_path) {
+        path_out << state.x << "," << state.y << "," << state.theta << "\n";
+    }
 
     auto end_time = std::chrono::steady_clock::now();
     const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(

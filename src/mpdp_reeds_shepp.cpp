@@ -41,14 +41,23 @@ std::vector<State> reeds_shepp_path(
 
     Configuration2 ci(start.x, start.y, start.theta);
     Configuration2 cf(goal.x, goal.y, goal.theta);
+
+    std::vector<std::tuple<Configuration2, Configuration2, double>> batch;
+    batch.emplace_back(ci, cf, kmax);
+    
     // Solve the shortest Reeds-Shepp path with the brute-force RS implementation.
-
-    // RS rs = RSbruteforce(ci, cf, kmax);
+#ifdef USE_ML
     RS rs = gen_rs_from_ml(ci, cf, kmax, "nnwide");
+    // std::vector<RS> RSs = gen_rs_from_ml_batch(batch, "nnwide", 5);
+#else
+    RS rs = RSbruteforce(ci, cf, kmax);
+    // std::vector<RS> RSs= RSbruteforceBatch(batch);
+#endif
 
+    // RS rs = RSs[0];
     if (!std::isfinite(rs.l()) || rs.getNseg() <= 0) {
-        std::cout << "BOH" << std::endl;
-        throw std::runtime_error("Reeds-Shepp path computation failed.");
+        std::cerr << "Reeds-Shepp path computation failed." << std::endl;
+        // rs = RSbruteforceBatch(batch)[0];
     }
 
     const auto lengths = rs.getL();

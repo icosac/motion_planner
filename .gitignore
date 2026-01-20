@@ -17,6 +17,12 @@ __pycache__/
 external/
 
 *.png
+*.pdf
+*.tex
+*.bk
+_deps/
+CMakeFiles/
+CMakeCache.txt
 
 # Prerequisites
 *.d

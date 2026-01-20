@@ -9,6 +9,25 @@ import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 
+plt.rcParams.update(
+    {
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman", "CMU Serif", "DejaVu Serif"],
+        "mathtext.fontset": "cm",
+        "font.size": 14,
+    }
+)
+
+GRID_VERTEX_SIZE = 12
+GRID_EDGE_WIDTH = 1.2
+PATH_WIDTH = 3.0
+START_MARKER_SIZE = 12
+GOAL_MARKER_SIZE = 16
+PATH_NODE_SIZE = 36
+LEGEND_MARKER_SCALE = 0.6
+LEGEND_HANDLE_LENGTH = 1.2
+LEGEND_HANDLE_PAD = 0.4
+
 
 def load_path(path: str) -> List[Tuple[float, float, float]]:
     points = []
@@ -56,6 +75,17 @@ def build_grid(min_x: float, max_x: float, min_y: float, max_y: float, resolutio
     return xs, ys
 
 
+def export_tikz(path: str) -> bool:
+    try:
+        import tikzplotlib
+    except ImportError:
+        print("tikzplotlib not installed. Install with: pip install tikzplotlib")
+        return False
+    tikzplotlib.save(path)
+    print(f"Wrote tikz to {path}")
+    return True
+
+
 def segment_hits_obstacles(
     start: Tuple[float, float],
     end: Tuple[float, float],
@@ -85,6 +115,7 @@ def main() -> None:
         description="Plot grid A* obstacles, path, and grid vertices/edges."
     )
     parser.add_argument("--path", required=True, help="Path to grid_path.csv")
+    parser.add_argument("--title", help="Custom figure title")
     parser.add_argument("--obstacles", help="Path to grid_obstacles.csv")
     parser.add_argument("--map", help="Path to grid_map.csv")
     parser.add_argument("--min-x", type=float, help="Grid min x (if --map not provided)")
@@ -95,6 +126,10 @@ def main() -> None:
     parser.add_argument("--no-vertices", action="store_true", help="Disable grid vertices")
     parser.add_argument("--no-edges", action="store_true", help="Disable grid edges")
     parser.add_argument("--nodes", help="Path to nodes CSV to highlight lattice nodes")
+    parser.add_argument("--tikz", help="Write tikz output to this file")
+    parser.add_argument("--pdf", help="Write PDF output to this file")
+    parser.add_argument("--no-show", action="store_true", help="Do not display the plot window")
+    parser.add_argument("--no-legend", action="store_true", help="Disable legend")
     args = parser.parse_args()
 
     path = load_path(args.path)
@@ -127,7 +162,7 @@ def main() -> None:
 
     fig, ax = plt.subplots(figsize=(7, 7))
     ax.set_aspect("equal", adjustable="box")
-    ax.set_title("Grid A* Path")
+    ax.set_title(args.title or "Grid A* Path")
 
     xv, yv = np.meshgrid(xs, ys)
     valid_mask = np.ones_like(xv, dtype=bool)
@@ -163,11 +198,11 @@ def main() -> None:
                         end = (xs[i + 1], ys[j - 1])
                         if not segment_hits_obstacles(start, end, obstacles):
                             segments.append((start, end))
-        grid_lines = LineCollection(segments, colors="#cccccc", linewidths=0.6, alpha=0.6)
+        grid_lines = LineCollection(segments, colors="#cccccc", linewidths=GRID_EDGE_WIDTH, alpha=0.6)
         ax.add_collection(grid_lines)
 
     if not args.no_vertices:
-        ax.scatter(xv[valid_mask], yv[valid_mask], s=6, c="#999999", alpha=0.5, zorder=1)
+        ax.scatter(xv[valid_mask], yv[valid_mask], s=GRID_VERTEX_SIZE, c="#999999", alpha=0.5, zorder=1)
 
     for obs_x, obs_y, obs_r in obstacles:
         ax.add_patch(Circle((obs_x, obs_y), obs_r, color="#666666", alpha=0.4, zorder=2))
@@ -175,22 +210,35 @@ def main() -> None:
     if path:
         path_x = [p[0] for p in path]
         path_y = [p[1] for p in path]
-        ax.plot(path_x, path_y, color="#ff7f0e", linewidth=2.0, label="path", zorder=3)
-        ax.plot(path_x[0], path_y[0], "go", markersize=6, label="start", zorder=4)
-        ax.plot(path_x[-1], path_y[-1], "r*", markersize=8, label="goal", zorder=4)
+        ax.plot(path_x, path_y, color="#ff7f0e", linewidth=PATH_WIDTH, label="path", zorder=3)
+        ax.plot(path_x[0], path_y[0], "go", markersize=START_MARKER_SIZE, label="start", zorder=4)
+        ax.plot(path_x[-1], path_y[-1], "r*", markersize=GOAL_MARKER_SIZE, label="goal", zorder=4)
 
     if args.nodes:
         node_points = load_path(args.nodes)
         if node_points:
             node_x = [p[0] for p in node_points]
             node_y = [p[1] for p in node_points]
-            ax.scatter(node_x, node_y, s=24, c="#1f77b4", alpha=0.7, zorder=3, label="path nodes")
+            ax.scatter(node_x, node_y, s=PATH_NODE_SIZE, c="#1f77b4", alpha=0.7, zorder=3, label="path nodes")
 
     margin = 0.5
     ax.set_xlim(min_x - margin, max_x + margin)
     ax.set_ylim(min_y - margin, max_y + margin)
-    ax.legend(loc="upper right")
-    plt.show()
+    if not args.no_legend:
+        ax.legend(
+            loc="upper left",
+            markerscale=LEGEND_MARKER_SCALE,
+            handlelength=LEGEND_HANDLE_LENGTH,
+            handletextpad=LEGEND_HANDLE_PAD,
+        )
+    if args.tikz:
+        export_tikz(args.tikz)
+
+    if args.pdf:
+        fig.savefig(args.pdf, bbox_inches="tight")
+
+    if not args.no_show:
+        plt.show()
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ def main():
             sys.executable,
             "tools/plot_grid_astar.py",
             "--path",
-            "hybrid_path.csv",
+            "hybrid_path_shortcut.csv",
             "--obstacles",
             "hybrid_obstacles.csv",
             "--map",

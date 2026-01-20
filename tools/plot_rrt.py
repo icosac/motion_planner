@@ -10,6 +10,24 @@ from matplotlib import animation
 from matplotlib.collections import LineCollection
 from matplotlib.patches import Circle
 
+plt.rcParams.update(
+    {
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman", "CMU Serif", "DejaVu Serif"],
+        "mathtext.fontset": "cm",
+        "font.size": 14,
+    }
+)
+
+TREE_EDGE_WIDTH = 2.0
+NODE_SIZE = 16
+PATH_WIDTH = 3.0
+START_MARKER_SIZE = 16
+GOAL_MARKER_SIZE = 16
+LEGEND_MARKER_SCALE = 0.6
+LEGEND_HANDLE_LENGTH = 1.2
+LEGEND_HANDLE_PAD = 0.4
+
 
 def parse_float(value: str) -> float:
     if value is None or value == "":
@@ -73,15 +91,32 @@ def load_obstacles(path: str):
     return obstacles
 
 
+def export_tikz(path: str) -> bool:
+    try:
+        import tikzplotlib
+    except ImportError:
+        print("tikzplotlib not installed. Install with: pip install tikzplotlib")
+        return False
+    tikzplotlib.save(path)
+    print(f"Wrote tikz to {path}")
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="Animate RRT/RRT* growth from CSV logs.")
     parser.add_argument("--tree", required=True, help="Path to rrt_tree.csv")
     parser.add_argument("--obstacles", help="Path to rrt_obstacles.csv")
     parser.add_argument("--path", help="Path to rrt_path.csv for final trajectory")
     parser.add_argument("--interval", type=float, default=20.0, help="Animation interval in ms")
+    parser.add_argument("--title", help="Custom figure title")
     parser.add_argument("--interval-us", type=float, help="Animation interval in microseconds")
     parser.add_argument("--interval-ns", type=float, help="Animation interval in nanoseconds")
     parser.add_argument("--blit", action="store_true", help="Enable blitting for faster rendering")
+    parser.add_argument("--final-frame", action="store_true", help="Render only the final frame")
+    parser.add_argument("--tikz", help="Write tikz output to this file")
+    parser.add_argument("--pdf", help="Write PDF output to this file")
+    parser.add_argument("--no-show", action="store_true", help="Do not display the plot window")
+    parser.add_argument("--no-legend", action="store_true", help="Disable legend")
     args = parser.parse_args()
 
     events, root, goal, xs, ys = load_events(args.tree)
@@ -99,7 +134,7 @@ def main():
 
     fig, ax = plt.subplots(figsize=(7, 7))
     ax.set_aspect("equal", adjustable="box")
-    ax.set_title("RRT Tree Growth")
+    ax.set_title(args.title or "RRT Tree Growth")
 
     if xs and ys:
         margin = 0.5
@@ -110,15 +145,15 @@ def main():
         ax.add_patch(Circle((obs_x, obs_y), obs_r, color="#666", alpha=0.4))
 
     if root is not None:
-        ax.plot(root[0], root[1], "go", markersize=6, label="start")
+        ax.plot(root[0], root[1], "go", markersize=START_MARKER_SIZE, label="start")
     if goal is not None:
-        ax.plot(goal[0], goal[1], "r*", markersize=8, label="goal")
+        ax.plot(goal[0], goal[1], "r*", markersize=GOAL_MARKER_SIZE, label="goal")
 
-    lc = LineCollection([], colors="#1f77b4", linewidths=0.8, alpha=0.8)
+    lc = LineCollection([], colors="#1f77b4", linewidths=TREE_EDGE_WIDTH, alpha=0.8)
     ax.add_collection(lc)
 
-    node_scatter = ax.scatter([], [], s=6, c="#1f77b4", alpha=0.6)
-    path_line, = ax.plot([], [], color="#ff7f0e", linewidth=2.0, alpha=0.9, label="path")
+    node_scatter = ax.scatter([], [], s=NODE_SIZE, c="#1f77b4", alpha=0.6)
+    path_line, = ax.plot([], [], color="#ff7f0e", linewidth=PATH_WIDTH, alpha=0.9, label="path")
 
     if args.path:
         path_xs = []
@@ -170,20 +205,43 @@ def main():
             node_scatter.set_offsets(np.empty((0, 2)))
         return lc, node_scatter, path_line
 
-    ani = animation.FuncAnimation(
-        fig,
-        animate,
-        init_func=init,
-        frames=len(events),
-        interval=interval_ms,
-        blit=args.blit,
-        repeat=False,
-    )
+    render_static = args.final_frame or interval_ms <= 0.0 or args.tikz or args.pdf
+    if render_static:
+        init()
+        for event in events:
+            apply_event(event)
+        lc.set_segments(edges)
+        if nodes:
+            node_scatter.set_offsets(np.asarray(nodes))
+        else:
+            node_scatter.set_offsets(np.empty((0, 2)))
+    else:
+        ani = animation.FuncAnimation(
+            fig,
+            animate,
+            init_func=init,
+            frames=len(events),
+            interval=interval_ms,
+            blit=args.blit,
+            repeat=False,
+        )
 
-    if root is not None or goal is not None:
-        ax.legend(loc="upper right")
+    if (root is not None or goal is not None) and not args.no_legend:
+        ax.legend(
+            loc="upper left",
+            markerscale=LEGEND_MARKER_SCALE,
+            handlelength=LEGEND_HANDLE_LENGTH,
+            handletextpad=LEGEND_HANDLE_PAD,
+        )
 
-    plt.show()
+    if args.tikz:
+        export_tikz(args.tikz)
+
+    if args.pdf:
+        fig.savefig(args.pdf, bbox_inches="tight")
+
+    if not args.no_show:
+        plt.show()
 
 
 if __name__ == "__main__":

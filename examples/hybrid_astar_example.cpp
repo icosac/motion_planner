@@ -27,8 +27,10 @@ int main() {
 
     // Simple circular obstacles.
     const std::vector<CircleObstacle> obstacles = {
-        {4.0, 5.0, 1.1},
+        {4.0, 5.0, 1.0},
         {6.0, 4.0, 1.0},
+        {7.0, 7.0, 1.0},
+        {3.0, 8.0, 1.0}
     };
 
     // Distance metric for A* priority (SE(2) heuristic).
@@ -56,7 +58,7 @@ int main() {
     options.max_x = max_x;
     options.min_y = min_y;
     options.max_y = max_y;
-    options.resolution = 0.25;
+    options.resolution = 0.5;
     options.theta_bins = 72;
     options.step_size = 0.7;
     options.turning_radius = 1.0;
@@ -104,10 +106,10 @@ int main() {
 
     motion_planner::ShortcutOptions shortcut_options;
     shortcut_options.max_iterations = 200;
-    shortcut_options.min_improvement = 1e-3;
+    shortcut_options.min_improvement = 1e-9;
 
-    const auto shortened = motion_planner::randomized_shortcut(
-        path,
+    const auto shortened_nodes = motion_planner::randomized_shortcut(
+        result.nodes,
         steer,
         distance,
         is_state_valid,
@@ -117,19 +119,35 @@ int main() {
     shortcut_out << "x,y,theta\n";
 
     std::cout << "Path found. States: " << path.size() << "\n";
-    // for (const auto &state : path) {
-    //     std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
-    //     path_out << state.x << "," << state.y << "," << state.theta << "\n";
-    // }
+    for (const auto &state : path) {
+        std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
+        path_out << state.x << "," << state.y << "," << state.theta << "\n";
+    }
 
-    // std::cout << "Shortcut path states: " << shortened.size() << "\n";
-    // for (const auto &state : shortened) {
-    //     shortcut_out << state.x << "," << state.y << "," << state.theta << "\n";
-    // }
+    std::vector<State> shortened;
+    if (!shortened_nodes.empty()) {
+        shortened.push_back(shortened_nodes.front());
+        for (size_t i = 0; i + 1 < shortened_nodes.size(); ++i) {
+            auto segment = steer(shortened_nodes[i], shortened_nodes[i + 1]);
+            if (segment.empty()) {
+                continue;
+            }
+            if (!shortened.empty()) {
+                segment.erase(segment.begin());
+            }
+            shortened.insert(shortened.end(), segment.begin(), segment.end());
+        }
+    }
 
-    // for (const auto &state : result.nodes) {
-    //     nodes_out << state.x << "," << state.y << "," << state.theta << "\n";
-    // }
+    std::cout << "Shortcut path states: " << shortened.size() << "\n";
+    for (const auto &state : shortened) {
+        shortcut_out << state.x << "," << state.y << "," << state.theta << "\n";
+        std::cout << state.x << ", " << state.y << ", " << state.theta << "\n";
+    }
+
+    for (const auto &state : result.nodes) {
+        nodes_out << state.x << "," << state.y << "," << state.theta << "\n";
+    }
 
     auto end_time = std::chrono::steady_clock::now();
     const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(

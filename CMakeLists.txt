@@ -22,6 +22,11 @@ set(CUDA_ON OFF CACHE BOOL "" FORCE)
 set(COMPILE_CUDA_EXEC OFF CACHE BOOL "" FORCE)
 set(MPDP_BUILD_POLYNOMIALS OFF CACHE BOOL "" FORCE)
 
+option(USE_ML "Enable ML-based Reeds-Shepp path generation" OFF)
+if(USE_ML)
+    add_definitions(-DUSE_ML)
+endif()
+
 add_subdirectory(external/mpdp EXCLUDE_FROM_ALL)
 
 target_include_directories(motion_planner
